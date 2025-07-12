@@ -5,7 +5,7 @@ const cors = require("cors");
 const path = require("path");
 
 const app = express();
-const PORT = 3000 || process.env.PORT; //change this code to process.env.PORT so that it can be deployed on replit.
+const PORT = 3000;
 
 // Replace with your MongoDB Atlas URI
 const MONGODB_URI =

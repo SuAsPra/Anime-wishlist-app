@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Anime Counter</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background-image: url('https://images5.alphacoders.com/132/1322133.jpeg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    .main-title {
+      font-size: 48px;
+      margin-top: 30px;
+      font-weight: bold;
+      color: #ffcc00;
+      text-shadow: 2px 2px 5px black;
+      text-align: center;
+    }
+
+    .form-split {
+      display: flex;
+      justify-content: center;
+      margin-top: 60px;
+    }
+
+    .form-wrapper {
+      background-image: url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExdmlyOThsbG15MmFmaHU2czJmbzlvZG1seXVxbTNjZzc0b2w0cjhnMiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/a3IGFA4BKrE40/giphy.gif');
+      background-size: cover;
+      background-position: center;
+      padding: 40px 0;
+      margin-top: 40px;
+    }
+
+    .form-section {
+      width: 300px;
+      margin: 0 40px;
+      padding: 20px;
+      background-color: rgba(0,0,0,0.6);
+      border-radius: 10px;
+    }
+
+    .form-section h2 {
+      margin-bottom: 20px;
+      color: #ffcc00;
+    }
+
+    .form-section input {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+    }
+
+    .form-section button {
+      width: 100%;
+      padding: 10px;
+      background-color: #ffcc00;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #kaido {
+      position: fixed;
+      bottom: 50px;
+      left: 50px;
+      width: 120px;
+      height: auto;
+      z-index: 99;
+      transition: transform 0.2s linear;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #00ffff;
+      text-decoration: none;
+    }
+
+    #status {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 20px;
+      color: white;
+    }
+
+    #Motionart {
+      display: block;
+      margin: 40px auto;
+      width: 160px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-title">🔥 Anime Counter 🔥</div>
+  Create your personal anime wishlist — never lose track of what to watch next! <br>
+
+
+  <div class="form-wrapper">
+    <div class="form-split">
+      <div class="form-section">
+        <h2>Sign Up</h2>
+        <input type="text" id="signup-username" placeholder="Username" />
+        <input type="password" id="signup-password" placeholder="Password" />
+        <button onclick="signup()">Sign Up</button>
+      </div>
+
+      <div class="form-section">
+        <h2>Login</h2>
+        <input type="text" id="login-username" placeholder="Username" />
+        <input type="password" id="login-password" placeholder="Password" />
+        <button onclick="login()">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <img id="kaido" src="dragon1.png" alt="Kaido" />
+  <p id="status"></p>
+
+  <img id="Motionart" src="https://64.media.tumblr.com/fd0d8bd67d3c91616f7c15dd34c33bf3/a40332963fd4a9d6-eb/s400x600/2375a410a4005fac7c27d65054907a67cdab81ef.gifv" alt="Motion art" />
+  <footer>
+    🌐 <a href="https://github.com/SuAsPra" target="_blank">My GitHub: SuAsPra</a>
+  </footer>
+
+  <script>
+    function signup() {
+      const username = document.getElementById("signup-username").value;
+      const password = document.getElementById("signup-password").value;
+
+      fetch("/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            document.getElementById("status").innerText = "Signup successful!";
+          } else {
+            document.getElementById("status").innerText = "Signup failed!";
+          }
+        });
+    }
+
+    function login() {
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+
+      fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            localStorage.setItem("user", username);
+            window.location.href = "dashboard.html";
+          } else {
+            document.getElementById("status").innerText = "Login failed!";
+          }
+        });
+    }
+
+    // Kaido animation
+    const kaido = document.getElementById("kaido");
+    let x = 50, y = window.innerHeight - 200;
+    let dx = 2, dy = -2, angle = 0;
+
+    function moveKaido() {
+      const w = kaido.offsetWidth;
+      const h = kaido.offsetHeight;
+
+      x += dx;
+      y += dy;
+
+      if (x + w >= window.innerWidth || x <= 0) {
+        dx = -dx;
+        angle += 90;
+      }
+      if (y + h >= window.innerHeight || y <= 0) {
+        dy = -dy;
+        angle += 90;
+      }
+
+      kaido.style.left = x + "px";
+      kaido.style.top = y + "px";
+      kaido.style.transform = `rotate(${angle}deg)`;
+    }
+
+    setInterval(moveKaido, 20);
+  </script>
+</body>
+</html>

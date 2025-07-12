@@ -1,15 +1,15 @@
 {
-  "name": "nodejs",
+  "name": "anime-wishlist-app",
   "version": "1.0.0",
-  "description": "",
+  "description": "Anime wishlist app with Express and CSV storage",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@types/node": "^22.13.11"
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.0"
   }
 }

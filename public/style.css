@@ -1,0 +1,46 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #1f1f1f;
+  color: white;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+.form-section input {
+  display: block;
+  width: calc(100% - 16px); /* Shrink input to fit padding */
+  margin-bottom: 10px;
+  padding: 8px;
+  box-sizing: border-box; /* Ensures padding doesn’t increase size */
+}
+
+
+.form-container {
+  margin-top: 100px;
+}
+
+input, button {
+  padding: 10px;
+  margin: 10px;
+  width: 200px;
+}
+
+.anime-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.anime-card {
+  background-color: #2d2d2d;
+  border-radius: 10px;
+  margin: 15px;
+  padding: 15px;
+  width: 200px;
+}
+
+.anime-card img {
+  width: 100%;
+  border-radius: 10px;
+}

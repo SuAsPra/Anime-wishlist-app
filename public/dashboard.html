@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Live Anime Dashboard</title>
+    <style>
+      /* (Your entire CSS is already compatible — left unchanged) */
+      /* ...CSS code from your post is kept as-is */
+      body {
+        margin: 0;
+        padding: 20px;
+        background-color: #0a0a0a;
+        color: white;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      h1 {
+        text-align: center;
+        color: #ffcc00;
+        margin-bottom: 10px;
+      }
+      p.instructions {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 16px;
+        color: #ddd;
+      }
+      .anime-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+      }
+      .anime-card {
+        background-color: #1c1c1c;
+        border-radius: 10px;
+        overflow: hidden;
+        width: 160px;
+        box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+        cursor: pointer;
+      }
+      .anime-card:hover {
+        transform: scale(1.05);
+      }
+      .anime-card img {
+        width: 100%;
+        height: auto;
+      }
+      .anime-card div {
+        padding: 10px;
+        text-align: center;
+      }
+      .anime-card.highlight {
+        border: 2px solid #00ffcc;
+        box-shadow: 0 0 12px #00ffcc;
+      }
+      .watchlist {
+        margin-top: 40px;
+        padding: 20px;
+        background-color: #111;
+        border-radius: 10px;
+      }
+      .watchlist h2 {
+        color: #ffcc00;
+      }
+      ul {
+        list-style: disc;
+        padding-left: 20px;
+      }
+      .pagination {
+        text-align: center;
+        margin-top: 30px;
+      }
+      .pagination button {
+        margin: 0 5px;
+        padding: 8px 12px;
+        background-color: #222;
+        border: 1px solid #555;
+        color: #ffcc00;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      .pagination button.active {
+        background-color: #ffcc00;
+        color: #111;
+        font-weight: bold;
+      }
+      /* Account button & panel */
+      .account-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px; /* changed from left: 20px */
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #ffcc00;
+        cursor: pointer;
+        z-index: 999;
+      }
+      .account-btn img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .account-panel {
+        position: fixed;
+        top: 0;
+        right: -200px;
+        width: 200px;
+        height: 100vh;
+        background-color: #111;
+        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.5);
+        transition: right 0.3s ease;
+        z-index: 998;
+        display: flex;
+        flex-direction: column;
+        padding-top: 80px;
+        padding-left: 20px;
+      }
+      .account-panel.open {
+        right: 0;
+      }
+      .account-panel button {
+        background: none;
+        border: none;
+        color: #ffcc00;
+        font-size: 16px;
+        text-align: left;
+        margin-bottom: 20px;
+        cursor: pointer;
+      }
+      .account-panel button:hover {
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Account Button -->
+    <div class="account-btn" onclick="toggleAccountPanel()">
+      <img
+        src="https://media.istockphoto.com/id/2168774111/vector/avatar-or-person-sign-profile-picture-portrait-icon-user-profile-symbol.jpg?s=612x612&w=0&k=20&c=6qw1LRG53z00RXJnVKQC58W7XnW2gdQfGBIR43E97Oc="
+        alt="Account"
+      />
+    </div>
+
+    <!-- Side Panel -->
+    <div class="account-panel" id="accountPanel">
+      <button onclick="logout()">Log Out</button>
+    </div>
+
+    <!-- Search Bar and Enter Button 
+<div style="text-align:center; margin-top: 20px;">
+  <input type="text" id="searchInput" placeholder="Search anime..." style="padding: 8px; width: 250px;">
+  <button id="searchBtn">
+    <img src="enter.png" alt="Enter" style="height: 20px;">
+  </button>
+</div>
+-->
+
+    <h1>Top Anime Dashboard (Live from Jikan API)</h1>
+    <p class="instructions">
+      Click on an anime's image or name to add or remove it from your wishlist.
+      Scroll down to view your wishlist.
+    </p>
+
+    <div class="anime-grid" id="animeContainer"></div>
+    <div class="pagination" id="paginationContainer"></div>
+
+    <div class="watchlist">
+      <h2>Your Wishlist</h2>
+      <ul id="watchlistItems"></ul>
+    </div>
+
+    <script>
+      const container = document.getElementById("animeContainer");
+      const paginationEl = document.getElementById("paginationContainer");
+      const watchlistEl = document.getElementById("watchlistItems");
+      const username = localStorage.getItem("user") || "guest";
+      const LIMIT = 24;
+      const MAX_PAGES = 10;
+      const watchlist = new Set();
+      let currentPage = 1;
+
+      function loadWishlistFromServer(callback) {
+        fetch(`/wishlist?username=${username}`)
+          .then((res) => res.json())
+          .then((data) => {
+            watchlist.clear();
+            watchlistEl.innerHTML = "";
+            data.forEach((title) => {
+              watchlist.add(title);
+              const li = document.createElement("li");
+              li.textContent = title;
+              watchlistEl.appendChild(li);
+            });
+            if (callback) callback();
+          })
+          .catch((err) => console.warn("Failed to load wishlist:", err));
+      }
+
+      function syncToServer(title, action) {
+        fetch("/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, anime: title, action }),
+        }).catch((err) => console.warn("Server error:", err));
+      }
+
+      function addOrRemoveFromWatchlist(title) {
+        if (watchlist.has(title)) {
+          watchlist.delete(title);
+          [...watchlistEl.children].forEach((li) => {
+            if (li.textContent === title) watchlistEl.removeChild(li);
+          });
+          alert(`${title} removed from wishlist.`);
+          syncToServer(title, "remove");
+        } else {
+          watchlist.add(title);
+          const li = document.createElement("li");
+          li.textContent = title;
+          watchlistEl.appendChild(li);
+          alert(`${title} added to wishlist.`);
+          syncToServer(title, "add");
+        }
+        loadAnimePage(currentPage); // Refresh to update highlight
+      }
+
+      function loadAnimePage(page = 1) {
+        currentPage = page;
+        container.innerHTML = "<p>Loading...</p>";
+        fetch(`https://api.jikan.moe/v4/top/anime?limit=${LIMIT}&page=${page}`)
+          .then((res) => res.json())
+          .then((data) => {
+            container.innerHTML = "";
+            const fragment = document.createDocumentFragment();
+            data.data.forEach((anime) => {
+              const card = document.createElement("div");
+              card.className = "anime-card";
+              if (watchlist.has(anime.title)) {
+                card.classList.add("highlight");
+              }
+              card.onclick = () => addOrRemoveFromWatchlist(anime.title);
+              card.innerHTML = `
+            <img src="${anime.images.jpg.image_url}" alt="${anime.title}" loading="lazy">
+            <div>${anime.title}</div>
+          `;
+              fragment.appendChild(card);
+            });
+            container.appendChild(fragment);
+            updatePagination(page);
+          })
+          .catch((err) => {
+            container.innerHTML =
+              "<p>Failed to load anime data. Please try again later.</p>";
+            console.error("Error fetching anime:", err);
+          });
+      }
+
+      function updatePagination(activePage) {
+        paginationEl.innerHTML = "";
+        for (let i = 1; i <= MAX_PAGES; i++) {
+          const btn = document.createElement("button");
+          btn.textContent = i;
+          if (i === activePage) btn.classList.add("active");
+          btn.onclick = () => loadAnimePage(i);
+          paginationEl.appendChild(btn);
+        }
+      }
+
+      function toggleAccountPanel() {
+        document.getElementById("accountPanel").classList.toggle("open");
+      }
+
+      function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "index.html";
+      }
+
+      // Initial Load
+      loadWishlistFromServer(() => loadAnimePage(1));
+    </script>
+  </body>
+</html>
